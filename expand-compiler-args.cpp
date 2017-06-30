@@ -27,9 +27,9 @@ bool pushChar(State cur, State next) {
             cur == outside ? next == unq : cur == next;
 }
 
-CharClass charClass(char c) {
+CharClass charClass(int c) {
     return c == '\\' ? backslash : c == '\'' ? apostrophe : c == '"' ? quotation_mark :
-            isspace(c) ? space : other;
+            c == EOF || isspace(c) ? space : other;
 }
 
 void expandArg(std::string arg) {
@@ -41,7 +41,9 @@ void expandArg(std::string arg) {
 
     arg.clear();
     State cur = outside;
-    for (int c = fgetc(f); c != EOF; c = fgetc(f)) {
+    int c;
+    do {
+        c = fgetc(f);
         State next = State(transitions[cur][charClass(c)]);
         if (pushChar(cur, next)) {
             arg.push_back(c);
@@ -51,10 +53,7 @@ void expandArg(std::string arg) {
             arg.clear();
         }
         cur = next;
-    }
-    if (cur != outside) {
-        expandArg(arg);
-    }
+    } while (c != EOF);
 
     fclose(f);
 }
