@@ -19,7 +19,7 @@ void append(String *s, char c) {
     s->data[s->len - 1] = c;
 }
 
-void assign(String *s, const char *cs, size_t len) {
+void assign(String *s, void *cs, size_t len) {
     resize(s, len);
     memcpy(s->data, cs, len);
 }
