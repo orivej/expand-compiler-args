@@ -1,5 +1,3 @@
-CXXFLAGS += -std=c++11
-
 default: expand-compiler-args
 
 test: expand-compiler-args ghc_7.rsp

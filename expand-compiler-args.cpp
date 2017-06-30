@@ -1,9 +1,8 @@
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <string>
-
-using namespace std;
 
 enum CharClass { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 };
 enum State { outside = 0, unq = 1, unq_esc = 2, sq = 3, sq_esc = 4, dq = 5, dq_esc = 6 };
@@ -28,38 +27,39 @@ bool pushChar(State cur, State next) {
             cur == outside ? next == unq : cur == next;
 }
 
-void expandArg(string arg);
+CharClass charClass(char c) {
+    return c == '\\' ? backslash : c == '\'' ? apostrophe : c == '"' ? quotation_mark :
+            isspace(c) ? space : other;
+}
+
+void expandArg(const char *arg);
 
 void expandFile(FILE *f) {
-    string arg;
+    std::string arg;
     State cur = outside;
     for (int c = fgetc(f); c != EOF; c = fgetc(f)) {
-        int cls = c == '\\' ? backslash :
-                  c == '\'' ? apostrophe :
-                  c == '"' ? quotation_mark :
-                  isspace(c) ? space : other;
-        State next = State(transitions[cur][cls]);
+        State next = State(transitions[cur][charClass(c)]);
         if (pushChar(cur, next)) {
             arg.push_back(c);
         }
         if (pushArg(cur, next)) {
-            expandArg(arg);
-            arg = "";
+            expandArg(arg.c_str());
+            arg.clear();
         }
         cur = next;
     }
     if (cur != outside) {
-        expandArg(arg);
+        expandArg(arg.c_str());
     }
 }
 
-void expandArg(string arg) {
+void expandArg(const char *arg) {
     FILE *f;
     if (arg[0] == '@' && (f = fopen(&arg[1], "r"))) {
         expandFile(f);
         fclose(f);
     } else {
-        fwrite(arg.c_str(), 1, arg.length() + 1, stdout);
+        fwrite(arg, 1, strlen(arg) + 1, stdout);
     }
 }
 
