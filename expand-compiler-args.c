@@ -42,7 +42,7 @@ const char *transitions[] = {
 
 CharClass charClass(int c) {
     return c == '\\' ? backslash : c == '\'' ? apostrophe : c == '"' ? quotation_mark :
-            c == EOF || isspace(c) ? space : other;
+            isspace(c) ? space : other;
 }
 
 void expandArg(String *arg) {
@@ -58,14 +58,13 @@ void expandArg(String *arg) {
     do {
         c = fgetc(f);
         State next = transitions[cur][charClass(c)];
-        if (cur == unq_esc || cur == sq_esc || cur == dq_esc ||
-            cur == outside ? next == unq : cur == next) {
-            append(arg, c);
-        }
-        if (cur == unq && next == outside) {
+        if ((cur == unq && next == outside) || (cur != outside && c == EOF)) {
             append(arg, '\0');
             expandArg(arg);
             resize(arg, 0);
+        } else if (cur == unq_esc || cur == sq_esc || cur == dq_esc ||
+                   cur == outside ? next == unq : cur == next) {
+            append(arg, c);
         }
         cur = next;
     } while (c != EOF);
