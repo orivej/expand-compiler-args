@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct { char *data; int len, cap; } String;
+typedef struct { char *data; size_t len, cap; } String;
 
 void resize(String *s, size_t len) {
     s->len = len;
