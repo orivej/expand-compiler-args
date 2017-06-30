@@ -57,7 +57,7 @@ void expandArg(String *arg) {
         return;
     }
 
-    arg->len = 0;
+    resize(arg, 0);
     State cur = outside;
     int c;
     do {
@@ -70,7 +70,7 @@ void expandArg(String *arg) {
         if (cur == unq && next == outside) {
             append(arg, '\0');
             expandArg(arg);
-            arg->len = 0;
+            resize(arg, 0);
         }
         cur = next;
     } while (c != EOF);
