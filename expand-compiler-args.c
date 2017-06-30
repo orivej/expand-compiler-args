@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -11,6 +12,7 @@ void resize(String *s, size_t len) {
     if (s->cap < s->len) {
         s->cap = s->len * 2;
         s->data = (char *)realloc(s->data, s->cap);
+        assert(s->data);
     }
 }
 
