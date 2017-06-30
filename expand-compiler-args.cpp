@@ -32,10 +32,14 @@ CharClass charClass(char c) {
             isspace(c) ? space : other;
 }
 
-void expandArg(const char *arg);
+void expandArg(std::string arg) {
+    FILE *f;
+    if (arg[0] != '@' || !(f = fopen(&arg[1], "r"))) {
+        fwrite(arg.c_str(), 1, arg.length() + 1, stdout);
+        return;
+    }
 
-void expandFile(FILE *f) {
-    std::string arg;
+    arg.clear();
     State cur = outside;
     for (int c = fgetc(f); c != EOF; c = fgetc(f)) {
         State next = State(transitions[cur][charClass(c)]);
@@ -43,24 +47,16 @@ void expandFile(FILE *f) {
             arg.push_back(c);
         }
         if (pushArg(cur, next)) {
-            expandArg(arg.c_str());
+            expandArg(arg);
             arg.clear();
         }
         cur = next;
     }
     if (cur != outside) {
-        expandArg(arg.c_str());
+        expandArg(arg);
     }
-}
 
-void expandArg(const char *arg) {
-    FILE *f;
-    if (arg[0] == '@' && (f = fopen(&arg[1], "r"))) {
-        expandFile(f);
-        fclose(f);
-    } else {
-        fwrite(arg, 1, strlen(arg) + 1, stdout);
-    }
+    fclose(f);
 }
 
 int main(int argc, char **argv) {
