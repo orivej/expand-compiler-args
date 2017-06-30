@@ -46,15 +46,6 @@ const char *transitions[] = {
     "\5\5\5\5\5",
 };
 
-bool pushArg(State cur, State next) {
-    return cur == unq && next == outside;
-}
-
-bool pushChar(State cur, State next) {
-    return cur == unq_esc || cur == sq_esc || cur == dq_esc ||
-            cur == outside ? next == unq : cur == next;
-}
-
 CharClass charClass(int c) {
     return c == '\\' ? backslash : c == '\'' ? apostrophe : c == '"' ? quotation_mark :
             c == EOF || isspace(c) ? space : other;
@@ -73,10 +64,11 @@ void expandArg(String *arg) {
     do {
         c = fgetc(f);
         State next = transitions[cur][charClass(c)];
-        if (pushChar(cur, next)) {
+        if (cur == unq_esc || cur == sq_esc || cur == dq_esc ||
+            cur == outside ? next == unq : cur == next) {
             append(arg, c);
         }
-        if (pushArg(cur, next)) {
+        if (cur == unq && next == outside) {
             append(arg, '\0');
             expandArg(arg);
             arg->len = 0;
