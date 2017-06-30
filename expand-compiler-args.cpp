@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include <string>
-#include <vector>
 
 using namespace std;
 
@@ -29,8 +28,9 @@ bool pushChar(State cur, State next) {
             cur == outside ? next == unq : cur == next;
 }
 
-vector<string> expandFile(FILE *f) {
-    vector<string> args;
+void expandArg(string arg);
+
+void expandFile(FILE *f) {
     string arg;
     State cur = outside;
     for (int c = fgetc(f); c != EOF; c = fgetc(f)) {
@@ -43,30 +43,29 @@ vector<string> expandFile(FILE *f) {
             arg.push_back(c);
         }
         if (pushArg(cur, next)) {
-            args.push_back(arg);
+            expandArg(arg);
             arg = "";
         }
         cur = next;
     }
     if (cur != outside) {
-        args.push_back(arg);
+        expandArg(arg);
     }
-    return args;
 }
 
-void expandArgs(vector<string> args) {
+void expandArg(string arg) {
     FILE *f;
-    for (string arg : args) {
-        if (arg[0] == '@' && (f = fopen(&arg[1], "r"))) {
-            expandArgs(expandFile(f));
-            fclose(f);
-        } else {
-            fwrite(arg.c_str(), 1, arg.length() + 1, stdout);
-        }
+    if (arg[0] == '@' && (f = fopen(&arg[1], "r"))) {
+        expandFile(f);
+        fclose(f);
+    } else {
+        fwrite(arg.c_str(), 1, arg.length() + 1, stdout);
     }
 }
 
 int main(int argc, char **argv) {
-    expandArgs(vector<string>(argv + 1, argv + argc));
+    while (*++argv) {
+        expandArg(*argv);
+    }
     return 0;
 }
