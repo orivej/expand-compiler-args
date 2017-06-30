@@ -9,13 +9,6 @@ typedef struct {
     int len, cap;
 } String;
 
-void erase(String *s) {
-    if (s->data) {
-        free(s->data);
-    }
-    *s = (String){ 0 };
-}
-
 void resize(String *s, size_t len) {
     s->len = len;
     if (s->cap < s->len) {
@@ -32,6 +25,11 @@ void append(String *s, char c) {
 void assign(String *s, const char *cs, size_t len) {
     resize(s, len);
     memcpy(s->data, cs, len);
+}
+
+void erase(String *s) {
+    free(s->data);
+    *s = (String){ 0 };
 }
 
 typedef enum { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 } CharClass;
