@@ -26,11 +26,6 @@ void assign(String *s, void *cs, size_t len) {
     memcpy(s->data, cs, len);
 }
 
-void erase(String *s) {
-    free(s->data);
-    *s = (String){ 0 };
-}
-
 typedef enum { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 } CharClass;
 typedef enum { outside = 0, unq = 1, unq_esc = 2, sq = 3, sq_esc = 4, dq = 5, dq_esc = 6 } State;
 
@@ -84,6 +79,6 @@ int main(int argc, char **argv) {
         assign(&arg, *argv, strlen(*argv) + 1);
         expandArg(&arg);
     }
-    erase(&arg);
+    free(arg.data);
     return 0;
 }
