@@ -1,18 +1,19 @@
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-struct String {
+typedef struct {
     char *data;
     int len, cap;
-};
+} String;
 
 void erase(String *s) {
     if (s->data) {
         free(s->data);
     }
-    *s = String();
+    *s = (String){ 0 };
 }
 
 void resize(String *s, size_t len) {
@@ -33,8 +34,8 @@ void assign(String *s, const char *cs, size_t len) {
     memcpy(s->data, cs, len);
 }
 
-enum CharClass { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 };
-enum State { outside = 0, unq = 1, unq_esc = 2, sq = 3, sq_esc = 4, dq = 5, dq_esc = 6 };
+typedef enum { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 } CharClass;
+typedef enum { outside = 0, unq = 1, unq_esc = 2, sq = 3, sq_esc = 4, dq = 5, dq_esc = 6 } State;
 
 // current State -> CharClass -> next State
 const char *transitions[] = {
@@ -73,7 +74,7 @@ void expandArg(String *arg) {
     int c;
     do {
         c = fgetc(f);
-        State next = State(transitions[cur][charClass(c)]);
+        State next = transitions[cur][charClass(c)];
         if (pushChar(cur, next)) {
             append(arg, c);
         }
