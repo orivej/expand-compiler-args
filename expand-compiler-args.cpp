@@ -1,8 +1,37 @@
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include <string>
+struct String {
+    char *data;
+    int len, cap;
+};
+
+void erase(String *s) {
+    if (s->data) {
+        free(s->data);
+    }
+    *s = String();
+}
+
+void resize(String *s, size_t len) {
+    s->len = len;
+    if (s->cap < s->len) {
+        s->cap = s->len * 2;
+        s->data = (char *)realloc(s->data, s->cap);
+    }
+}
+
+void append(String *s, char c) {
+    resize(s, s->len + 1);
+    s->data[s->len - 1] = c;
+}
+
+void assign(String *s, const char *cs, size_t len) {
+    resize(s, len);
+    memcpy(s->data, cs, len);
+}
 
 enum CharClass { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 };
 enum State { outside = 0, unq = 1, unq_esc = 2, sq = 3, sq_esc = 4, dq = 5, dq_esc = 6 };
@@ -32,25 +61,26 @@ CharClass charClass(int c) {
             c == EOF || isspace(c) ? space : other;
 }
 
-void expandArg(std::string arg) {
+void expandArg(String *arg) {
     FILE *f;
-    if (arg[0] != '@' || !(f = fopen(&arg[1], "r"))) {
-        fwrite(arg.c_str(), 1, arg.length() + 1, stdout);
+    if (arg->data[0] != '@' || !(f = fopen(&arg->data[1], "r"))) {
+        fwrite(arg->data, 1, arg->len, stdout);
         return;
     }
 
-    arg.clear();
+    arg->len = 0;
     State cur = outside;
     int c;
     do {
         c = fgetc(f);
         State next = State(transitions[cur][charClass(c)]);
         if (pushChar(cur, next)) {
-            arg.push_back(c);
+            append(arg, c);
         }
         if (pushArg(cur, next)) {
+            append(arg, '\0');
             expandArg(arg);
-            arg.clear();
+            arg->len = 0;
         }
         cur = next;
     } while (c != EOF);
@@ -59,8 +89,11 @@ void expandArg(std::string arg) {
 }
 
 int main(int argc, char **argv) {
+    String arg = { 0 };
     while (*++argv) {
-        expandArg(*argv);
+        assign(&arg, *argv, strlen(*argv) + 1);
+        expandArg(&arg);
     }
+    erase(&arg);
     return 0;
 }
