@@ -1,5 +1,5 @@
 #!/bin/bash
 
 expandResponseParams() {
-    eval "params=($(./expand-compiler-args "$@"))"
+    readarray -d '' params < <(./expand-compiler-args "$@")
 }

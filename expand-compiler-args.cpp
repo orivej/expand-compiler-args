@@ -54,14 +54,6 @@ vector<string> expandFile(FILE *f) {
     return args;
 }
 
-void emitArg(string arg) {
-    fputs("'", stdout);
-    for (char c : arg) {
-        c == '\'' ? fputs("'\\''", stdout) : putchar(c);
-    }
-    fputs("' ", stdout);
-}
-
 void expandArgs(vector<string> args) {
     FILE *f;
     for (string arg : args) {
@@ -69,7 +61,7 @@ void expandArgs(vector<string> args) {
             expandArgs(expandFile(f));
             fclose(f);
         } else {
-            emitArg(arg);
+            fwrite(arg.c_str(), 1, arg.length() + 1, stdout);
         }
     }
 }
