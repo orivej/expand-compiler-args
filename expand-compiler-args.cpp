@@ -1,33 +1,10 @@
-#include <assert.h>
 #include <ctype.h>
-#include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-typedef struct { char *data; size_t len, cap; } String;
+#include <string>
 
-void resize(String *s, size_t len) {
-    s->len = len;
-    if (s->cap < s->len) {
-        s->cap = s->len * 2;
-        s->data = (char *)realloc(s->data, s->cap);
-        assert(s->data);
-    }
-}
-
-void append(String *s, char c) {
-    resize(s, s->len + 1);
-    s->data[s->len - 1] = c;
-}
-
-void assign(String *s, void *data, size_t len) {
-    resize(s, len);
-    memcpy(s->data, data, len);
-}
-
-typedef enum { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 } CharClass;
-typedef enum { outside = 0, unq = 1, unq_esc = 2, sq = 3, sq_esc = 4, dq = 5, dq_esc = 6 } State;
+enum CharClass { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 };
+enum State { outside = 0, unq = 1, unq_esc = 2, sq = 3, sq_esc = 4, dq = 5, dq_esc = 6 };
 
 // current State -> CharClass -> next State
 const char *transitions[] = {
@@ -45,26 +22,25 @@ CharClass charClass(int c) {
             isspace(c) ? space : other;
 }
 
-void expandArg(String *arg) {
+void expandArg(std::string &arg) {
     FILE *f;
-    if (arg->data[0] != '@' || !(f = fopen(&arg->data[1], "r"))) {
-        fwrite(arg->data, 1, arg->len, stdout);
+    if (arg[0] != '@' || !(f = fopen(&arg[1], "r"))) {
+        fwrite(arg.c_str(), 1, arg.length() + 1, stdout);
         return;
     }
 
-    resize(arg, 0);
+    arg.clear();
     State cur = outside;
     int c;
     do {
         c = fgetc(f);
-        State next = transitions[cur][charClass(c)];
+        State next = State(transitions[cur][charClass(c)]);
         if ((cur == unq && next == outside) || (cur != outside && c == EOF)) {
-            append(arg, '\0');
             expandArg(arg);
-            resize(arg, 0);
+            arg.clear();
         } else if (cur == unq_esc || cur == sq_esc || cur == dq_esc ||
                    cur == outside ? next == unq : cur == next) {
-            append(arg, c);
+            arg.push_back(c);
         }
         cur = next;
     } while (c != EOF);
@@ -73,11 +49,10 @@ void expandArg(String *arg) {
 }
 
 int main(int argc, char **argv) {
-    String arg = { 0 };
+    std::string arg;
     while (*++argv) {
-        assign(&arg, *argv, strlen(*argv) + 1);
-        expandArg(&arg);
+        arg.assign(*argv);
+        expandArg(arg);
     }
-    free(arg.data);
     return 0;
 }
