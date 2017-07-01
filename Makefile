@@ -11,6 +11,11 @@ test2: expand-compiler-args responsefile.txt
 	./test.sh new.sh @responsefile.txt
 	./test.sh old.sh @responsefile.txt
 
+test2orig: expand-compiler-args responsefile.txt
+	./test.sh new.sh @responsefile.txt
+	./test.sh old.sh @responsefile.txt
+	./test.sh orig.sh @responsefile.txt
+
 ghc_7.rsp:
 	wget "https://gist.githubusercontent.com/pbogdan/9d6986bf931b58a70d75e14eb40ee8a1/raw/79a59fd108ba276aa069ef730ec7d9ffea3f1b8f/ghc_7.rsp"
 
