@@ -7,6 +7,12 @@ user    0m0.007s
 sys     0m0.007s
 67597 chars, 1044 args
 
+./test.sh newbash.sh @responsefile.txt
+real    0m1.209s
+user    0m1.062s
+sys     0m0.168s
+67597 chars, 1044 args
+
 ./test.sh old.sh @responsefile.txt
 real    0m2.110s
 user    0m1.953s
