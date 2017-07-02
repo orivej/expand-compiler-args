@@ -16,14 +16,9 @@ void resize(String *s, size_t len) {
     }
 }
 
-void append(String *s, char c) {
-    resize(s, s->len + 1);
-    s->data[s->len - 1] = c;
-}
-
-void assign(String *s, void *data, size_t len) {
-    resize(s, len);
-    memcpy(s->data, data, len);
+void append(String *s, void *data, size_t len) {
+    resize(s, s->len + len);
+    memcpy(s->data + s->len - len, data, len);
 }
 
 typedef enum { space = 0, other = 1, backslash = 2, apostrophe = 3, quotation_mark = 4 } CharClass;
@@ -59,12 +54,13 @@ void expandArg(String *arg) {
         c = fgetc(f);
         State next = transitions[cur][charClass(c)];
         if ((cur == unq && next == outside) || (cur != outside && c == EOF)) {
-            append(arg, '\0');
+            append(arg, "", 1);
             expandArg(arg);
             resize(arg, 0);
         } else if (cur == unq_esc || cur == sq_esc || cur == dq_esc ||
                    cur == outside ? next == unq : cur == next) {
-            append(arg, c);
+            char s = c;
+            append(arg, &s, 1);
         }
         cur = next;
     } while (c != EOF);
@@ -75,7 +71,8 @@ void expandArg(String *arg) {
 int main(int argc, char **argv) {
     String arg = { 0 };
     while (*++argv) {
-        assign(&arg, *argv, strlen(*argv) + 1);
+        resize(&arg, 0);
+        append(&arg, *argv, strlen(*argv) + 1);
         expandArg(&arg);
     }
     free(arg.data);
